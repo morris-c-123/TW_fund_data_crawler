@@ -1,48 +1,46 @@
 """crawl Taiwan historical fund performance from SITCA"""
+
 import os
 import csv
 import time
-from datetime import date
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from dateutil.relativedelta import relativedelta
 
 
-def data_time_dic_generator(start, end):
-    """generate {1:'200007', ...}
-    input value: start, end
-    """
-    
+def sitca_org_crawler(start, end):
+    """input sample value: start=202001, end=202112"""
+
     # build full range dict
-    
+
     data_time_dic = {}
-    selected_month = date(2000, 7, 1)
+    selected_month = datetime(2000, 7, 1)
 
-    for i in range(1, 300):
-        if selected_month.month < 10:
-            output = str(str(selected_month.year) +
-                         "0" + str(selected_month.month))
-        else:
-            output = str(str(selected_month.year) + str(selected_month.month))
-
+    for i in range(1, 350):
+        output = selected_month.strftime("%Y%m")
         data_time_dic[i] = output
         selected_month = selected_month + relativedelta(months=+1)
-    
-    # select duration
-    
-    data_duration_to_download = [i for i in range(start, end+1)]
-    dict_data_duration_to_download = {
-        x: data_time_dic[x] for x in data_duration_to_download}
 
-    print("""dict_name: data_time_dic; details: """)
-    print(dict_data_duration_to_download)
+    # set duration
 
-    return dict_data_duration_to_download
+    try:
+        duration = {
+            k: v for k, v in data_time_dic.items() if int(start) <= int(v) <= int(end)}
+        # reverse dic
+        duration = dict(reversed(duration.items()))
 
+    except:  # pylint: disable = bare-except
+        print("Please check the variables of start and end")
+    else:
+        if not duration:
+            print("Please check the variables of start and end")
+        else:
+            print(f"duration: {duration}")
 
-def sitca_org_crawler(duration):
-    """input: duration"""
+    # start main code of crawler
+
     for data_time_number, data_time_str in duration.items():
 
         # open web
@@ -129,6 +127,5 @@ def sitca_org_crawler(duration):
         print("csv file: " + data_time_str + ".csv was created")
 
 
-data_time = data_time_dic_generator(151, 152)
-sitca_org_crawler(data_time)
+sitca_org_crawler(start=202201, end=202207)
 
