@@ -1,13 +1,12 @@
 """crawl Taiwan historical fund performance from SITCA"""
-
 import os
 import csv
 import time
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import NoSuchElementException
 from dateutil.relativedelta import relativedelta
+from bs4 import BeautifulSoup
 
 
 def sitca_org_crawler(start, end):
@@ -50,7 +49,7 @@ def sitca_org_crawler(start, end):
             "https://www.sitca.org.tw/ROC/Industry/IN2201.aspx?pid=IN2221_01")
 
         print("web opened")
-        delay_secs = 5
+        delay_secs = 3
         time.sleep(delay_secs)
 
         # setting filter
@@ -74,12 +73,7 @@ def sitca_org_crawler(start, end):
         submit.click()
         time.sleep(delay_secs)
 
-        print("target found.")
-
-        # scraping as csv
-
-        print("start scraping as csv")
-        loop_break = 0
+        print("target page found.")
 
         # create folder
 
@@ -90,42 +84,50 @@ def sitca_org_crawler(start, end):
 
         file_path = "./data/" + data_time_str + ".csv"
 
+        # create soup
+
+        soup = BeautifulSoup(browser.page_source, 'html.parser')
+
+        title_columns = soup.find_all("td", class_="DTHeader")
+        fund_values = soup.find_all("td", {"class": ["DTodd", "DTeven"]})
+
+        # open csv file
+
         with open(file_path, "w", encoding="utf-8", newline="") as csvfile:
             writer = csv.writer(csvfile)
             print("csv open")
 
-            for fund in range(1, 10000):
-                if loop_break == 1:
-                    loop_break = 0
-                    print("總計 was found. stop scrawling")
-                    break
+            # write title columns
 
-                temp_list = []
+            title_list = []
 
-                for column in range(1, 18):
-                    locate = '//*[@id="GlobalTable"]/tbody/tr[3]/td/table/tbody/tr[' + \
-                        str(fund) + ']/td[' + str(column) + ']'
+            for i in title_columns:
+                title_list.append(i.text)
 
-                    try:
-                        fund_data = browser.find_element(By.XPATH, locate)
+            print("title columns:" + str(title_list))
+            writer.writerow(title_list)
 
-                    # set not_found element as blank
+            # odd columns
 
-                    except NoSuchElementException:
-                        temp_list.append("")
+            # 檢查 odd columns 是否對應 title columns
+            if not len(fund_values) % len(title_list) == 0:
+                print(
+                    "total number of crawled odd data cannot match the number of title columns")
 
-                    else:
-                        if "總計" in str(fund_data.text):
-                            loop_break = 1
-                            break
+            # odd values writerow
 
-                        temp_list.append(fund_data.text)
-
-                writer.writerow(temp_list)
+            temp_list = []
+            for k, v in enumerate(fund_values):
+                if not (k+1) % len(title_list) == 0:
+                    temp_list.append(v.text)
+                else:
+                    temp_list.append(v.text)
+                    writer.writerow(temp_list)
+                    temp_list = []
 
         browser.quit()
-        print("csv file: " + data_time_str + ".csv was created")
+        print("csv file: " + data_time_str + ".csv is created")
 
 
-sitca_org_crawler(start=202201, end=202207)
+sitca_org_crawler(start=200007, end=200811)
 
