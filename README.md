@@ -1,10 +1,10 @@
 # TW_fund_data_crawler
 
-This package can crawl fund data from SITCA and TAIEX index from TWS. 
+This package can crawl fund data from SITCA and TAIEX index from TWSE. 
 
-The data from SITCA included fund performance by month, fund cost and ROI. 
+The data from SITCA includes fund performance by month, fund cost and ROI. 
 
-To compare fund return to TAIEX, the 4th function can get the latest 5-year data of TAIEX index from TWSE.
+To compare fund return with TAIEX, the 4th function can get the latest 5-year data of TAIEX index from TWSE.
 
 The mentioned website are as follows:
 
